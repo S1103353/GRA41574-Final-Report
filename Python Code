@@ -1,0 +1,90 @@
+# Importing necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score, mean_absolute_error
+
+# Step 1: Creating a synthetic dataset
+mock_data = pd.DataFrame({
+    "LotArea": np.random.randint(500, 10000, 1000),
+    "YearBuilt": np.random.randint(1900, 2023, 1000),
+    "OverallQual": np.random.randint(1, 10, 1000),
+    "TotalBsmtSF": np.random.randint(500, 4000, 1000),
+    "GrLivArea": np.random.randint(500, 4000, 1000),
+    "GarageCars": np.random.randint(0, 4, 1000),
+    "SalePrice": np.random.randint(50000, 500000, 1000)
+})
+
+print("Dataset Overview:")
+print(mock_data.info())
+print("\nSample Data:")
+print(mock_data.head())
+
+# Step 2: Splitting the dataset
+X = mock_data.drop(columns=["SalePrice"])
+y = mock_data["SalePrice"]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 3: Training and evaluating models
+models = {
+    "Linear Regression": LinearRegression(),
+    "Decision Tree": DecisionTreeRegressor(random_state=42),
+    "Random Forest": RandomForestRegressor(random_state=42)
+}
+
+results = {}
+for model_name, model in models.items():
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    results[model_name] = {
+        "R2": r2_score(y_test, y_pred),
+        "MAE": mean_absolute_error(y_test, y_pred)
+    }
+
+# Displaying results
+results_df = pd.DataFrame(results).T
+print("\nModel Performance:")
+print(results_df)
+
+# Step 4: Visualization - Correlation Heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(mock_data.corr(), cmap="coolwarm", annot=True)
+plt.title("Correlation Heatmap")
+plt.show()
+
+# Step 5: Visualization - Feature Importance
+rf_model = models["Random Forest"]
+feature_importances = pd.Series(rf_model.feature_importances_, index=X.columns).sort_values(ascending=False)
+plt.figure(figsize=(10, 6))
+feature_importances.plot(kind='bar')
+plt.title("Feature Importances (Random Forest)")
+plt.ylabel("Importance")
+plt.xlabel("Feature")
+plt.show()
+
+# Saving the dataset, results, and visualizations
+mock_data.to_csv("Housing_Price_Dataset.csv", index=False)
+results_df.to_csv("Model_Performance.csv")
+
+# Exporting visualizations
+plt.figure(figsize=(10, 8))
+sns.heatmap(mock_data.corr(), cmap="coolwarm", annot=True)
+plt.title("Correlation Heatmap")
+plt.savefig("correlation_heatmap.png")
+plt.close()
+
+plt.figure(figsize=(10, 6))
+feature_importances.plot(kind='bar')
+plt.title("Feature Importances (Random Forest)")
+plt.ylabel("Importance")
+plt.xlabel("Feature")
+plt.savefig("feature_importance.png")
+plt.close()
+
+print("All files have been saved successfully.")
